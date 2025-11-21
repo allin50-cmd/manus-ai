@@ -39,3 +39,28 @@ temp/
 # Build outputs
 dist/
 build/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars.json
+
+# React Admin UI
+admin-tenant-ui/node_modules/
+admin-tenant-ui/build/
+admin-tenant-ui/.env.local
+
+# Scripts
+scripts/node_modules/
+scripts/package-lock.json
+
+# Azure credentials (never commit)
+*.publishsettings
+*.azureProfile
+
+# Tenant-specific generated files
+tenants.csv
+tenant-*.tf.backup
