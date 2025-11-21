@@ -5,8 +5,10 @@ A complete, production-ready platform featuring local development tools, Azure c
 ## 📖 Documentation
 
 - **[LOCAL-DEVELOPMENT.md](./LOCAL-DEVELOPMENT.md)** - Complete local development guide with Actions API and Jobe AI Agent
+- **[AZURE-DEPLOYMENT-GUIDE.md](./AZURE-DEPLOYMENT-GUIDE.md)** - Complete Azure cloud deployment guide (v2.0)
 - **[TOOLS.md](./TOOLS.md)** - Comprehensive developer tools documentation
-- **[README.md](./README.md)** - This file: Azure cloud deployment guide
+- **[PROVISIONING.md](./PROVISIONING.md)** - Tenant provisioning and management guide
+- **[README.md](./README.md)** - This file: Quick start and overview
 
 ## 🎯 Quick Start Options
 
@@ -17,10 +19,20 @@ A complete, production-ready platform featuring local development tools, Azure c
 Starts complete local stack with PostgreSQL, Redis, Actions API (port 4000), and Jobe AI (port 3000).
 
 ### Option 2: Azure Cloud Deployment
+
+**New v2.0 (Recommended):**
+```bash
+./deploy-ultracore-optimized-v2.sh development
+```
+Complete production-ready deployment with ACR, PostgreSQL, Application Insights, and real applications.
+
+**Legacy v1.0:**
 ```bash
 ./deploy-ultracore-optimized.sh development
 ```
-Deploys optimized Azure infrastructure with cost controls.
+Basic deployment (uses placeholder images, not recommended).
+
+**See [AZURE-DEPLOYMENT-GUIDE.md](./AZURE-DEPLOYMENT-GUIDE.md) for complete documentation.**
 
 ## 💰 Cost Optimization Features
 
