@@ -1,0 +1,44 @@
+{
+  "name": "ultracore-local-stack",
+  "version": "1.0.0",
+  "description": "UltraCore Local Development Stack - Actions API, Jobe AI Agent, and Infrastructure",
+  "type": "module",
+  "main": "actions-server.js",
+  "scripts": {
+    "start": "node actions-server.js",
+    "start:actions": "node actions-server.js",
+    "start:jobe": "node jobe-server.js",
+    "start:all": "npm run start:actions & npm run start:jobe",
+    "dev": "NODE_ENV=development npm run start:all",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker:build": "docker-compose build",
+    "docker:rebuild": "docker-compose down && docker-compose build && docker-compose up -d",
+    "db:init": "node scripts/init-database.js",
+    "test": "node scripts/test-endpoints.js"
+  },
+  "keywords": [
+    "ultracore",
+    "deployment",
+    "api",
+    "ai-agent",
+    "microservices"
+  ],
+  "author": "UltraCore Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "pg": "^8.11.3",
+    "redis": "^4.6.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
