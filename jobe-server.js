@@ -115,6 +115,32 @@ app.get('/health', async (req, res) => {
 // JOBE ENDPOINTS
 // ====================================================================
 
+// Helper function to check brand service connectivity
+const checkBrandConnectivity = async (brandName, url) => {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+    const response = await fetch(`${url}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (response.ok) {
+      return { ok: true, status: response.status };
+    } else {
+      return { ok: false, error: `HTTP ${response.status}` };
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      return { ok: false, error: 'Connection timeout' };
+    }
+    return { ok: false, error: error.message || 'Connection failed' };
+  }
+};
+
 // Demo bundle debug endpoint
 app.post('/api/jobe/demo-bundle-debug', async (req, res) => {
   console.log('🤖 Jobe: Analyzing bundle deployment issues...');
@@ -124,6 +150,22 @@ app.post('/api/jobe/demo-bundle-debug', async (req, res) => {
       tenant: req.body.tenant || 'DEMO',
     });
 
+    // Define brand services to check
+    const brands = {
+      ultai: process.env.ULTAI_URL || 'http://localhost:3001',
+      fineguard: process.env.FINEGUARD_URL || 'http://localhost:3002',
+      vaultline: process.env.VAULTLINE_URL || 'http://localhost:3003',
+    };
+
+    // Check connectivity to all brand services
+    console.log('🔍 Checking brand service connectivity...');
+    const brandConnectivity = {};
+
+    for (const [brandName, url] of Object.entries(brands)) {
+      console.log(`   Checking ${brandName} at ${url}...`);
+      brandConnectivity[brandName] = await checkBrandConnectivity(brandName, url);
+    }
+
     res.json({
       ok: true,
       message: 'Bundle deployment analysis completed',
@@ -131,6 +173,9 @@ app.post('/api/jobe/demo-bundle-debug', async (req, res) => {
         ...analysis,
         debugMode: true,
         timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'local',
+        brandConnectivity,
+        brands,
       },
     });
   } catch (error) {

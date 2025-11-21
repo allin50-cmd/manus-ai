@@ -164,6 +164,37 @@ for i in {1..30}; do
     sleep 1
 done
 
+# Wait for Brand Services
+echo -n "   UltAI API: "
+for i in {1..30}; do
+    if curl -s http://localhost:3001/health &> /dev/null; then
+        echo -e "${GREEN}Ready${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 1
+done
+
+echo -n "   FineGuard API: "
+for i in {1..30}; do
+    if curl -s http://localhost:3002/health &> /dev/null; then
+        echo -e "${GREEN}Ready${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 1
+done
+
+echo -n "   VaultLine API: "
+for i in {1..30}; do
+    if curl -s http://localhost:3003/health &> /dev/null; then
+        echo -e "${GREEN}Ready${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 1
+done
+
 echo ""
 
 # ====================================================================
@@ -175,6 +206,9 @@ echo -e "${BLUE}📊 DEPLOYMENT SUMMARY${NC}"
 echo "=========================================="
 echo -e "${GREEN}🌐 Actions API:${NC}      http://localhost:4000"
 echo -e "${GREEN}🤖 Jobe AI API:${NC}      http://localhost:3000"
+echo -e "${GREEN}🔷 UltAI API:${NC}        http://localhost:3001"
+echo -e "${GREEN}🔷 FineGuard API:${NC}    http://localhost:3002"
+echo -e "${GREEN}🔷 VaultLine API:${NC}    http://localhost:3003"
 echo -e "${GREEN}🗄️  PostgreSQL:${NC}      localhost:5432"
 echo -e "${GREEN}🔴 Redis:${NC}            localhost:6379"
 echo -e "${GREEN}🎛️  PgAdmin:${NC}         http://localhost:5050"

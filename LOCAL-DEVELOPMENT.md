@@ -39,6 +39,9 @@ docker-compose logs -f
 |---------|------|-------------|
 | **Actions API** | 4000 | Main API for deployments and actions |
 | **Jobe AI Agent** | 3000 | AI-powered insights and recommendations |
+| **UltAI API** | 3001 | UltAI brand service API |
+| **FineGuard API** | 3002 | FineGuard brand service API |
+| **VaultLine API** | 3003 | VaultLine brand service API |
 | **PostgreSQL** | 5432 | Primary database |
 | **Redis** | 6379 | Caching layer |
 | **PgAdmin** | 5050 | Database management UI |
