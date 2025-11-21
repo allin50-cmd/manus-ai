@@ -39,3 +39,4 @@ temp/
 # Build outputs
 dist/
 build/
+validation-results.txt
