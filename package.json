@@ -5,10 +5,11 @@
   "type": "module",
   "main": "actions-server.js",
   "scripts": {
-    "start": "node actions-server.js",
+    "start": "node index.js",
+    "start:dashboard": "node index.js",
     "start:actions": "node actions-server.js",
     "start:jobe": "node jobe-server.js",
-    "start:all": "npm run start:actions & npm run start:jobe",
+    "start:all": "npm run start:dashboard & npm run start:actions & npm run start:jobe",
     "dev": "NODE_ENV=development npm run start:all",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",

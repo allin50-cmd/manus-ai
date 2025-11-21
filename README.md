@@ -14,7 +14,17 @@ A complete, production-ready platform featuring local development tools, Azure c
 ```bash
 ./deploy-now.sh
 ```
-Starts complete local stack with PostgreSQL, Redis, Actions API (port 4000), and Jobe AI (port 3000).
+Starts complete local stack with PostgreSQL, Redis, Dashboard (port 3000), Actions API (port 4000), and Jobe AI (port 3002).
+
+**Or run services individually:**
+```bash
+# Start dashboard server
+npm start
+# or
+node index.js
+
+# Access dashboard at http://localhost:3000
+```
 
 ### Option 2: Azure Cloud Deployment
 ```bash
@@ -125,15 +135,25 @@ The script performs the following steps automatically:
 
 ### Containers
 
-1. **Dashboard Service** (`uc-dash-*`)
-   - Port: 8080
-   - Features: Health checks, caching, cost-optimized
+1. **Dashboard Service** (`uc-dash-*` or `ultracore-dashboard`)
+   - Port: 3000 (local) or 3001 (Docker) or 8080 (Azure)
+   - Features: Tenant management UI, REST API, health checks, caching
    - Auto-scales: 0-5 replicas (dev) or 1-5 (prod)
+   - Endpoints:
+     - `GET /health` - Health check
+     - `GET /api/tenants` - List all tenants
+     - `POST /api/tenants/provision` - Provision new tenant
+     - `GET /api/stats` - Tenant statistics
 
 2. **Actions Service** (`uc-actions-*`)
    - Port: 4000
    - Features: AI integration, health monitoring
    - Auto-scales: 0-3 replicas (dev) or 1-3 (prod)
+
+3. **Jobe AI Service** (`ultracore-jobe-api`)
+   - Port: 3000 (in container) or 3002 (Docker host)
+   - Features: AI agent for tenant optimization
+   - Auto-scales: Based on workload
 
 ## 🧪 Testing Your Deployment
 
@@ -309,6 +329,89 @@ az group delete --name ultracore-development-rg --yes --no-wait
 # Production environment
 az group delete --name ultracore-production-rg --yes --no-wait
 ```
+
+## 🎛️ Dashboard Server
+
+The UltraCore Dashboard provides a web-based interface for managing tenants and viewing system status.
+
+### Starting the Dashboard
+
+**Option 1: Direct (Recommended for development)**
+```bash
+# Install dependencies
+npm install
+
+# Start dashboard server
+npm start
+# or
+node index.js
+
+# Access at http://localhost:3000
+```
+
+**Option 2: Docker Compose**
+```bash
+# Start all services including dashboard
+docker compose up -d
+
+# Dashboard available at http://localhost:3001
+# (Note: Port 3001 in Docker to avoid conflicts)
+```
+
+### Dashboard Features
+
+- **Tenant Management**: View, create, update, and delete tenants
+- **Provisioning**: Quick tenant provisioning with automated resource creation
+- **Statistics**: Real-time tenant metrics and usage statistics
+- **Audit Logs**: Complete audit trail of all tenant operations
+- **Health Monitoring**: System health checks and service status
+
+### API Endpoints
+
+```bash
+# Health check
+curl http://localhost:3000/health
+
+# List all tenants
+curl http://localhost:3000/api/tenants
+
+# Get specific tenant
+curl http://localhost:3000/api/tenants/your-tenant-slug
+
+# Provision new tenant
+curl -X POST http://localhost:3000/api/tenants/provision \
+  -H "Content-Type: application/json" \
+  -d '{
+    "slug": "example-corp",
+    "name": "Example Corporation",
+    "email": "admin@example.com",
+    "plan": "pro"
+  }'
+
+# Get statistics
+curl http://localhost:3000/api/stats
+```
+
+### Configuration
+
+The dashboard reads configuration from environment variables:
+
+```bash
+# Database
+POSTGRES_HOST=localhost
+POSTGRES_DB=ultracore
+SQL_SERVER=your-server.database.windows.net  # For Azure SQL
+
+# Azure Resources
+STORAGE_ACCOUNT=ultaivaultstore
+KEYVAULT_NAME=ultracore-kv
+
+# Server
+DASHBOARD_PORT=3000
+NODE_ENV=development
+```
+
+See [.env.example](./.env.example) for full configuration options.
 
 ## 🛠️ Developer Tools
 

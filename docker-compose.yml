@@ -69,6 +69,37 @@ services:
       - ultracore-network
     restart: unless-stopped
 
+  # Dashboard Server (Port 3001 in Docker, 3000 when run directly)
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: ultracore-dashboard
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      DASHBOARD_PORT: 3000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-ultracore}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      STORAGE_ACCOUNT: ${STORAGE_ACCOUNT:-ultaivaultstore}
+      KEYVAULT_NAME: ${KEYVAULT_NAME:-ultracore-kv}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./index.js:/app/index.js
+    networks:
+      - ultracore-network
+    restart: unless-stopped
+
   # Jobe AI Agent API Server (Port 3000)
   jobe-api:
     build:
@@ -76,7 +107,7 @@ services:
       dockerfile: Dockerfile.jobe
     container_name: ultracore-jobe-api
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       JOBE_PORT: 3000
