@@ -4,7 +4,12 @@ A complete, production-ready platform featuring local development tools, Azure c
 
 ## 📖 Documentation
 
-- **[LOCAL-DEVELOPMENT.md](./LOCAL-DEVELOPMENT.md)** - Complete local development guide with Actions API and Jobe AI Agent
+### 🚀 Getting Started (Pick One)
+- **[START-HERE.md](./START-HERE.md)** - ⚡ 5-minute quick start (copy & paste commands)
+- **[QUICK-START.md](./QUICK-START.md)** - 📋 Step-by-step non-technical guide
+- **[LOCAL-DEVELOPMENT.md](./LOCAL-DEVELOPMENT.md)** - 🔧 Complete technical development guide
+
+### 📚 Additional Documentation
 - **[TOOLS.md](./TOOLS.md)** - Comprehensive developer tools documentation
 - **[README.md](./README.md)** - This file: Azure cloud deployment guide
 
