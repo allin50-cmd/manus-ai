@@ -1,6 +1,26 @@
-# 🚀 UltraCore Optimized Azure Deployment
+# 🚀 UltraCore Platform
 
-A fully optimized, cost-efficient Azure deployment solution for the UltraCore platform with scale-to-zero capabilities, serverless architecture, and comprehensive monitoring.
+A complete, production-ready platform featuring local development tools, Azure cloud deployment, and comprehensive management utilities.
+
+## 📖 Documentation
+
+- **[LOCAL-DEVELOPMENT.md](./LOCAL-DEVELOPMENT.md)** - Complete local development guide with Actions API and Jobe AI Agent
+- **[TOOLS.md](./TOOLS.md)** - Comprehensive developer tools documentation
+- **[README.md](./README.md)** - This file: Azure cloud deployment guide
+
+## 🎯 Quick Start Options
+
+### Option 1: Local Development (Recommended for getting started)
+```bash
+./deploy-now.sh
+```
+Starts complete local stack with PostgreSQL, Redis, Actions API (port 4000), and Jobe AI (port 3000).
+
+### Option 2: Azure Cloud Deployment
+```bash
+./deploy-ultracore-optimized.sh development
+```
+Deploys optimized Azure infrastructure with cost controls.
 
 ## 💰 Cost Optimization Features
 
@@ -290,8 +310,43 @@ az group delete --name ultracore-development-rg --yes --no-wait
 az group delete --name ultracore-production-rg --yes --no-wait
 ```
 
+## 🛠️ Developer Tools
+
+UltraCore includes powerful CLI tools for development and management:
+
+### ultracore-cli.sh
+Unified command-line interface for all APIs:
+```bash
+./ultracore-cli.sh deploy ACCURACY intake-stack
+./ultracore-cli.sh jobe-insights ACCURACY
+./ultracore-cli.sh status-all
+```
+
+### Automated Testing
+```bash
+node scripts/test-endpoints.js
+```
+Runs 15+ automated tests across all endpoints.
+
+### Real-Time Monitoring
+```bash
+./scripts/monitor.sh
+```
+Live dashboard showing service health, resource usage, and activity.
+
+### Database Management
+```bash
+./scripts/db-manager.sh backup
+./scripts/db-manager.sh stats
+```
+Complete database backup, restore, and management utilities.
+
+**See [TOOLS.md](./TOOLS.md) for complete documentation.**
+
 ## 📚 Additional Resources
 
+- **[LOCAL-DEVELOPMENT.md](./LOCAL-DEVELOPMENT.md)** - Local development guide
+- **[TOOLS.md](./TOOLS.md)** - Developer tools documentation
 - [Azure Container Apps Documentation](https://learn.microsoft.com/azure/container-apps/)
 - [Azure Cosmos DB Pricing](https://azure.microsoft.com/pricing/details/cosmos-db/)
 - [Azure Cache for Redis Pricing](https://azure.microsoft.com/pricing/details/cache/)

@@ -16,8 +16,17 @@
     "docker:restart": "docker-compose restart",
     "docker:build": "docker-compose build",
     "docker:rebuild": "docker-compose down && docker-compose build && docker-compose up -d",
-    "db:init": "node scripts/init-database.js",
-    "test": "node scripts/test-endpoints.js"
+    "test": "node scripts/test-endpoints.js",
+    "test:watch": "nodemon --exec node scripts/test-endpoints.js",
+    "monitor": "./scripts/monitor.sh",
+    "monitor:once": "./scripts/monitor.sh --once",
+    "cli": "./ultracore-cli.sh",
+    "status": "./ultracore-cli.sh status-all",
+    "deploy": "./deploy-now.sh",
+    "db:backup": "./scripts/db-manager.sh backup",
+    "db:stats": "./scripts/db-manager.sh stats",
+    "db:psql": "./scripts/db-manager.sh psql",
+    "db:backups": "./scripts/db-manager.sh list-backups"
   },
   "keywords": [
     "ultracore",
