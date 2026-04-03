@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": { "value": "prod" },
+    "location": { "value": "uksouth" },
+    "appName": { "value": "fineguard" },
+    "mysqlAdminLogin": { "value": "fineguardadmin" },
+    "mysqlAdminPassword": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "mysql-admin-password"
+      }
+    },
+    "jwtSecret": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "jwt-secret"
+      }
+    },
+    "stripeSecretKey": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "stripe-secret-key"
+      }
+    },
+    "stripePublishableKey": { "value": "pk_live_REPLACE" },
+    "stripeWebhookSecret": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "stripe-webhook-secret"
+      }
+    },
+    "oauthAppId": { "value": "REPLACE_WITH_MANUS_APP_ID" },
+    "companiesHouseApiKey": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "companies-house-api-key"
+      }
+    },
+    "perplexityApiKey": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "perplexity-api-key"
+      }
+    },
+    "clicksendUsername": { "value": "REPLACE_WITH_CLICKSEND_USER" },
+    "clicksendApiKey": {
+      "reference": {
+        "keyVault": { "id": "/subscriptions/SUBSCRIPTION_ID/resourceGroups/fineguard-prod-rg/providers/Microsoft.KeyVault/vaults/fineguard-prod-kv" },
+        "secretName": "clicksend-api-key"
+      }
+    }
+  }
+}

@@ -1,12 +1,15 @@
-FROM python:3.11-slim
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+COPY package*.json ./
+RUN npm ci --production=false
 COPY . .
+RUN npm run build
 
-EXPOSE 8000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "600", "app:app"]
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY --from=builder /app/dist ./dist
+EXPOSE 5000
+CMD ["node", "dist/server/index.js"]

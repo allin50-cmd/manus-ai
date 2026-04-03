@@ -1,0 +1,384 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "FineGuard Pro — full infrastructure deployment. Provisions App Service, MySQL Flexible Server, Blob Storage, Key Vault, Application Insights, and Log Analytics in UK South.",
+    "company": "FINE GUARD LTD",
+    "companyNumber": "16895564"
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "defaultValue": "prod",
+      "allowedValues": ["dev", "staging", "prod"],
+      "metadata": { "description": "Deployment environment" }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "uksouth",
+      "metadata": { "description": "Azure region — uksouth for UK GDPR Art.44 compliance" }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "fineguard",
+      "metadata": { "description": "Base name for all resources" }
+    },
+    "mysqlAdminLogin": {
+      "type": "string",
+      "defaultValue": "fineguardadmin",
+      "metadata": { "description": "MySQL administrator login name" }
+    },
+    "mysqlAdminPassword": {
+      "type": "securestring",
+      "metadata": { "description": "MySQL administrator password (min 12 chars, upper+lower+digit+symbol)" }
+    },
+    "jwtSecret": {
+      "type": "securestring",
+      "metadata": { "description": "JWT signing secret for session cookies" }
+    },
+    "stripeSecretKey": {
+      "type": "securestring",
+      "metadata": { "description": "Stripe live secret key (sk_live_...)" }
+    },
+    "stripePublishableKey": {
+      "type": "string",
+      "metadata": { "description": "Stripe live publishable key (pk_live_...)" }
+    },
+    "stripeWebhookSecret": {
+      "type": "securestring",
+      "metadata": { "description": "Stripe webhook signing secret (whsec_...)" }
+    },
+    "oauthAppId": {
+      "type": "string",
+      "metadata": { "description": "Manus OAuth application ID" }
+    },
+    "companiesHouseApiKey": {
+      "type": "securestring",
+      "metadata": { "description": "Companies House REST API key" }
+    },
+    "perplexityApiKey": {
+      "type": "securestring",
+      "metadata": { "description": "Perplexity AI API key" }
+    },
+    "clicksendUsername": {
+      "type": "string",
+      "metadata": { "description": "ClickSend account username" }
+    },
+    "clicksendApiKey": {
+      "type": "securestring",
+      "metadata": { "description": "ClickSend API key" }
+    }
+  },
+  "variables": {
+    "prefix": "[concat(parameters('appName'), '-', parameters('environment'))]",
+    "appServicePlanName": "[concat(variables('prefix'), '-plan')]",
+    "webAppName": "[concat(variables('prefix'), '-app')]",
+    "mysqlServerName": "[concat(variables('prefix'), '-mysql')]",
+    "mysqlDatabaseName": "fineguarddb",
+    "storageAccountName": "[replace(concat(parameters('appName'), parameters('environment'), 'st'), '-', '')]",
+    "storageContainerName": "fineguard-files",
+    "keyVaultName": "[concat(variables('prefix'), '-kv')]",
+    "appInsightsName": "[concat(variables('prefix'), '-ai')]",
+    "logAnalyticsName": "[concat(variables('prefix'), '-logs')]",
+    "databaseUrl": "[concat('mysql://', parameters('mysqlAdminLogin'), ':', parameters('mysqlAdminPassword'), '@', variables('mysqlServerName'), '.mysql.database.azure.com:3306/', variables('mysqlDatabaseName'), '?ssl={\"rejectUnauthorized\":true}')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('logAnalyticsName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard",
+        "company": "FINE GUARD LTD"
+      },
+      "properties": {
+        "sku": { "name": "PerGB2018" },
+        "retentionInDays": 30
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('appInsightsName')]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]",
+        "IngestionMode": "LogAnalytics"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "sku": {
+        "name": "B2",
+        "tier": "Basic",
+        "capacity": 1
+      },
+      "kind": "linux",
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('webAppName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "kind": "app,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('appInsightsName'))]",
+        "[resourceId('Microsoft.DBforMySQL/flexibleServers', variables('mysqlServerName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "linuxFxVersion": "NODE|22-lts",
+          "appCommandLine": "node server/index.js",
+          "alwaysOn": true,
+          "minTlsVersion": "1.2",
+          "ftpsState": "Disabled",
+          "http20Enabled": true,
+          "appSettings": [
+            { "name": "NODE_ENV", "value": "production" },
+            { "name": "PORT", "value": "8080" },
+            { "name": "DATABASE_URL", "value": "[variables('databaseUrl')]" },
+            { "name": "JWT_SECRET", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=jwt-secret)')]" },
+            { "name": "VITE_APP_ID", "value": "[parameters('oauthAppId')]" },
+            { "name": "OAUTH_SERVER_URL", "value": "https://api.manus.im" },
+            { "name": "VITE_OAUTH_PORTAL_URL", "value": "https://manus.im" },
+            { "name": "STRIPE_SECRET_KEY", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=stripe-secret-key)')]" },
+            { "name": "VITE_STRIPE_PUBLISHABLE_KEY", "value": "[parameters('stripePublishableKey')]" },
+            { "name": "STRIPE_WEBHOOK_SECRET", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=stripe-webhook-secret)')]" },
+            { "name": "COMPANIES_HOUSE_API_KEY", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=companies-house-api-key)')]" },
+            { "name": "PERPLEXITY_API_KEY", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=perplexity-api-key)')]" },
+            { "name": "CLICKSEND_USERNAME", "value": "[parameters('clicksendUsername')]" },
+            { "name": "CLICKSEND_API_KEY", "value": "[concat('@Microsoft.KeyVault(VaultName=', variables('keyVaultName'), ';SecretName=clicksend-api-key)')]" },
+            { "name": "AZURE_STORAGE_ACCOUNT_NAME", "value": "[variables('storageAccountName')]" },
+            { "name": "AZURE_STORAGE_CONTAINER_NAME", "value": "[variables('storageContainerName')]" },
+            { "name": "AZURE_STORAGE_CONNECTION_STRING", "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2023-01-01').keys[0].value, ';EndpointSuffix=core.windows.net')]" },
+            { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName')), '2020-02-02').ConnectionString]" },
+            { "name": "WEBSITE_NODE_DEFAULT_VERSION", "value": "~22" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DBforMySQL/flexibleServers",
+      "apiVersion": "2023-06-30",
+      "name": "[variables('mysqlServerName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "sku": {
+        "name": "Standard_B2ms",
+        "tier": "Burstable"
+      },
+      "properties": {
+        "version": "8.0.21",
+        "administratorLogin": "[parameters('mysqlAdminLogin')]",
+        "administratorLoginPassword": "[parameters('mysqlAdminPassword')]",
+        "storage": {
+          "storageSizeGB": 20,
+          "iops": 360,
+          "autoGrow": "Enabled"
+        },
+        "backup": {
+          "backupRetentionDays": 7,
+          "geoRedundantBackup": "Disabled"
+        },
+        "highAvailability": {
+          "mode": "Disabled"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.DBforMySQL/flexibleServers/databases",
+      "apiVersion": "2023-06-30",
+      "name": "[concat(variables('mysqlServerName'), '/', variables('mysqlDatabaseName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforMySQL/flexibleServers', variables('mysqlServerName'))]"
+      ],
+      "properties": {
+        "charset": "utf8mb4",
+        "collation": "utf8mb4_unicode_ci"
+      }
+    },
+    {
+      "type": "Microsoft.DBforMySQL/flexibleServers/firewallRules",
+      "apiVersion": "2023-06-30",
+      "name": "[concat(variables('mysqlServerName'), '/AllowAzureServices')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforMySQL/flexibleServers', variables('mysqlServerName'))]"
+      ],
+      "properties": {
+        "startIpAddress": "0.0.0.0",
+        "endIpAddress": "0.0.0.0"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "kind": "StorageV2",
+      "sku": { "name": "Standard_LRS" },
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('storageAccountName'), '/default/', variables('storageContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "environment": "[parameters('environment')]",
+        "project": "fineguard"
+      },
+      "properties": {
+        "sku": { "family": "A", "name": "standard" },
+        "tenantId": "[subscription().tenantId]",
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 90,
+        "enablePurgeProtection": true
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName')), resourceId('Microsoft.Web/sites', variables('webAppName')), '4633458b-17de-408a-b874-0445c86b69e6')]",
+      "scope": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "[resourceId('Microsoft.Web/sites', variables('webAppName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('webAppName')), '2023-01-01', 'Full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/mysql-admin-password')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('mysqlAdminPassword')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/jwt-secret')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('jwtSecret')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/stripe-secret-key')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('stripeSecretKey')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/stripe-webhook-secret')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('stripeWebhookSecret')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/companies-house-api-key')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('companiesHouseApiKey')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/perplexity-api-key')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('perplexityApiKey')]" }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[concat(variables('keyVaultName'), '/clicksend-api-key')]",
+      "dependsOn": [ "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]" ],
+      "properties": { "value": "[parameters('clicksendApiKey')]" }
+    }
+  ],
+  "outputs": {
+    "webAppUrl": {
+      "type": "string",
+      "value": "[concat('https://', reference(resourceId('Microsoft.Web/sites', variables('webAppName'))).defaultHostName)]"
+    },
+    "webAppName": {
+      "type": "string",
+      "value": "[variables('webAppName')]"
+    },
+    "mysqlServerFqdn": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.DBforMySQL/flexibleServers', variables('mysqlServerName'))).fullyQualifiedDomainName]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[variables('keyVaultName')]"
+    },
+    "appInsightsConnectionString": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Insights/components', variables('appInsightsName'))).ConnectionString]"
+    }
+  }
+}
