@@ -1,0 +1,72 @@
+name: Bug Report
+description: Report a bug in FineGuard Pro
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please complete the form below.
+        **Do not use this form for security issues** — see [SECURITY.md](../../SECURITY.md).
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Log in as '...'
+        2. Navigate to '...'
+        3. Perform action '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behaviour
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Company monitoring / alerts
+        - Client management
+        - Dashboard
+        - Authentication / login
+        - Billing / Stripe
+        - API / tRPC
+        - Email / SMS notifications
+        - Reports
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit SHA
+      placeholder: "e.g. abc1234"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Screenshots
+      render: shell
